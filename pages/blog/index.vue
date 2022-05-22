@@ -1,3 +1,3 @@
 <template>
-  <Todo />
+  <BlogList />
 </template>

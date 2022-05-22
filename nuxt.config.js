@@ -1,7 +1,11 @@
 import colors from 'vuetify/es5/util/colors'
+import axios from 'axios'
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
-  ssr: false,
+  // ssr: false,
+  // target: 'server',
+  ssr: true,
+  target: 'static',
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -24,6 +28,10 @@ export default {
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [],
 
+  publicRuntimeConfig: {
+    MICROCMS_API_KEY: process.env.MICROCMS_API_KEY,
+    MICROCMS_API_URL: process.env.MICROCMS_API_URL
+  },
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
 
@@ -38,7 +46,7 @@ export default {
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
-  modules: [],
+  modules: ['@nuxtjs/axios'],
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
@@ -58,5 +66,27 @@ export default {
     }
   },
   // Build Configuration: https://go.nuxtjs.dev/config-build
-  build: {}
+  build: {},
+  generate: {
+    async routes() {
+      const routes = []
+      await axios
+        .get(process.env.MICROCMS_API_URL + '/blog', {
+          headers: { 'X-MICROCMS-API-KEY': process.env.MICROCMS_API_KEY }
+        })
+        .then((res) => {
+          for (let i = 0, len = res.data.contents.length; i < len; i++) {
+            const item = res.data.contents[i]
+            routes.push({
+              route: '/blog/' + item.id,
+              payload: item
+            })
+          }
+        })
+        .catch((e) => {
+          console.log('microCMS/listBlogs/Error', e)
+        })
+      return routes
+    }
+  }
 }
